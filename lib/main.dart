@@ -5,11 +5,13 @@ void main() => runApp(MyApp());
 
 class MyApp extends StatelessWidget {
   @override
-  Widget build(BuildContext context) {  
+  Widget build(BuildContext context) {
     return MaterialApp(
       title: 'MyShop',
       theme: ThemeData(
-        primarySwatch: Colors.blue,
+        primarySwatch: Colors.deepOrange,
+        accentColor: Colors.pinkAccent,
+        fontFamily: 'Lato',
       ),
       home: ProductOvervireScreen(),
     );
