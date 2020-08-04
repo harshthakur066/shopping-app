@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../providers/orders.dart';
 import '../providers/cart.dart' show Cart;
 import '../widgets/cart_item.dart';
+import './orders_screen.dart';
 
 class CartScreen extends StatelessWidget {
   static const routeName = '/cart';
@@ -68,6 +69,9 @@ class CartScreen extends StatelessWidget {
         onPressed: () {
           orders.addOrder(cart.items.values.toList(), cart.totalAmount);
           cart.clerCart();
+          Navigator.of(context).pushNamed(
+            OrdersScreen.routeName,
+          );
         },
       ),
     );
