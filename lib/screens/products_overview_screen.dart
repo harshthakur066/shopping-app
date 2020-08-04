@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:shoping_app/providers/cart.dart';
 
+import '../providers/cart.dart';
+import '../screens/cart_screen.dart';
 import '../widgets/products_grid_view.dart';
 import '../widgets/badge.dart.dart';
 
@@ -62,7 +63,8 @@ class _ProductOvervireScreenState extends State<ProductOvervireScreen> {
               icon: Icon(
                 Icons.shopping_cart,
               ),
-              onPressed: () {},
+              onPressed: () =>
+                  Navigator.of(context).pushNamed(CartScreen.routeName),
             ),
           ),
         ],
