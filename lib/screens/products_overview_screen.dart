@@ -56,6 +56,7 @@ class _ProductOvervireScreenState extends State<ProductOvervireScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final products = Provider.of<Products>(context);
     return Scaffold(
       appBar: AppBar(
         title: Text(
@@ -110,7 +111,11 @@ class _ProductOvervireScreenState extends State<ProductOvervireScreen> {
           ? Center(
               child: CircularProgressIndicator(),
             )
-          : ProductGridView(_showOnlyFav),
+          : RefreshIndicator(
+              onRefresh: () async {
+                await products.fetchProducts();
+              },
+              child: ProductGridView(_showOnlyFav)),
     );
   }
 }
