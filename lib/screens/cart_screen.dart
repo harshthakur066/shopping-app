@@ -12,7 +12,6 @@ class CartScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cart = Provider.of<Cart>(context);
-    final orders = Provider.of<Orders>(context, listen: false);
     return Scaffold(
       appBar: AppBar(
         title: Text(
@@ -62,18 +61,46 @@ class CartScreen extends StatelessWidget {
           ),
         ],
       ),
-      floatingActionButton: FloatingActionButton(
-        child: Icon(
-          Icons.local_shipping,
-        ),
-        onPressed: () {
-          orders.addOrder(cart.items.values.toList(), cart.totalAmount);
-          cart.clerCart();
-          Navigator.of(context).pushNamed(
-            OrdersScreen.routeName,
-          );
-        },
-      ),
+      floatingActionButton: cart.totalAmount <= 0 ? null : OrderButton(),
+    );
+  }
+}
+
+class OrderButton extends StatefulWidget {
+  @override
+  _OrderButtonState createState() => _OrderButtonState();
+}
+
+class _OrderButtonState extends State<OrderButton> {
+  var _isLoadig = false;
+  @override
+  Widget build(BuildContext context) {
+    final orders = Provider.of<Orders>(context, listen: false);
+    final cart = Provider.of<Cart>(context);
+    return FloatingActionButton(
+      child: _isLoadig
+          ? CircularProgressIndicator(
+              backgroundColor: Colors.white,
+            )
+          : Icon(
+              Icons.local_shipping,
+            ),
+      onPressed: _isLoadig
+          ? null
+          : () async {
+              setState(() {
+                _isLoadig = true;
+              });
+              await orders.addOrder(
+                  cart.items.values.toList(), cart.totalAmount);
+              setState(() {
+                _isLoadig = false;
+              });
+              cart.clerCart();
+              Navigator.of(context).pushNamed(
+                OrdersScreen.routeName,
+              );
+            },
     );
   }
 }
