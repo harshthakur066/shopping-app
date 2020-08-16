@@ -33,7 +33,7 @@ class MyApp extends StatelessWidget {
         ),
       ],
       child: MaterialApp(
-        title: 'MyShop',
+        title: 'Shopify',
         theme: ThemeData(
           primarySwatch: Colors.deepOrange,
           accentColor: Colors.pinkAccent,
