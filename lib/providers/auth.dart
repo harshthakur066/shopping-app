@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter/widgets.dart';
@@ -9,6 +10,7 @@ class Auth with ChangeNotifier {
   String _token;
   DateTime _expiryDate;
   String _userId;
+  Timer _authTimer;
 
   bool get isAuth {
     return token != null;
@@ -55,6 +57,7 @@ class Auth with ChangeNotifier {
           ),
         ),
       );
+      _autolLogout();
       notifyListeners();
     } catch (err) {
       print(err);
@@ -70,10 +73,22 @@ class Auth with ChangeNotifier {
     return _authenticated(email, password, 'signInWithPassword');
   }
 
-  Future<void> logout() async {
+  void logout() {
     _token = null;
     _expiryDate = null;
     _userId = null;
+    if (_authTimer != null) {
+      _authTimer.cancel();
+      _authTimer = null;
+    }
     notifyListeners();
+  }
+
+  void _autolLogout() {
+    if (_authTimer != null) {
+      _authTimer.cancel();
+    }
+    final expiryTime = _expiryDate.difference(DateTime.now()).inSeconds;
+    _authTimer = Timer(Duration(seconds: expiryTime), logout);
   }
 }
