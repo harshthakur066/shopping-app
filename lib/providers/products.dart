@@ -42,8 +42,9 @@ class Products with ChangeNotifier {
     // ),
   ];
   final String _authToken;
+  final String _userId;
 
-  Products(this._authToken, this._items);
+  Products(this._authToken, this._userId, this._items);
 
   List<Product> get items {
     return [..._items];
@@ -57,9 +58,11 @@ class Products with ChangeNotifier {
     return _items.firstWhere((prod) => prod.id == id);
   }
 
-  Future<void> fetchProducts() async {
-    final url =
-        'https://flutter-shop-app-26fac.firebaseio.com/products.json?auth=$_authToken';
+  Future<void> fetchProducts([bool filterByUser = false]) async {
+    final filterString =
+        filterByUser ? 'orderBy="creatorId"&equalTo="$_userId"' : '';
+    var url =
+        'https://flutter-shop-app-26fac.firebaseio.com/products.json?auth=$_authToken&$filterString';
     try {
       final response = await http.get(url);
       // print(json.decode(response.body));
@@ -67,6 +70,10 @@ class Products with ChangeNotifier {
       if (extractedData == null) {
         return;
       }
+      url =
+          'https://flutter-shop-app-26fac.firebaseio.com/userFavorites/$_userId.json?auth=$_authToken';
+      final favResponse = await http.get(url);
+      final favData = json.decode(favResponse.body);
       final List<Product> loadedProds = [];
       extractedData.forEach((prodId, prodData) {
         loadedProds.add(
@@ -76,7 +83,7 @@ class Products with ChangeNotifier {
             description: prodData['description'],
             price: prodData['price'],
             imageUrl: prodData['imageUrl'],
-            isFavorite: prodData['isFavorite'],
+            isFavorite: favData == null ? false : favData[prodId] ?? false,
           ),
         );
       });
@@ -99,7 +106,7 @@ class Products with ChangeNotifier {
           'description': product.description,
           'price': product.price,
           'imageUrl': product.imageUrl,
-          'isFavorite': product.isFavorite,
+          'creatorId': _userId,
         }),
       );
       final newProduct = Product(
