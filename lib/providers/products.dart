@@ -41,6 +41,10 @@ class Products with ChangeNotifier {
     //       'https://upload.wikimedia.org/wikipedia/commons/thumb/1/14/Cast-Iron-Pan.jpg/1024px-Cast-Iron-Pan.jpg',
     // ),
   ];
+  final String _authToken;
+
+  Products(this._authToken, this._items);
+
   List<Product> get items {
     return [..._items];
   }
@@ -54,7 +58,8 @@ class Products with ChangeNotifier {
   }
 
   Future<void> fetchProducts() async {
-    const url = 'https://flutter-shop-app-26fac.firebaseio.com/products.json';
+    final url =
+        'https://flutter-shop-app-26fac.firebaseio.com/products.json?auth=$_authToken';
     try {
       final response = await http.get(url);
       // print(json.decode(response.body));
@@ -84,7 +89,8 @@ class Products with ChangeNotifier {
   }
 
   Future<void> addProduct(Product product) async {
-    const url = 'https://flutter-shop-app-26fac.firebaseio.com/products.json';
+    final url =
+        'https://flutter-shop-app-26fac.firebaseio.com/products.json?auth=$_authToken';
     try {
       final response = await http.post(
         url,
@@ -113,7 +119,7 @@ class Products with ChangeNotifier {
 
   Future<void> updateProduct(String id, Product newProduct) async {
     final url =
-        'https://flutter-shop-app-26fac.firebaseio.com/products/$id.json';
+        'https://flutter-shop-app-26fac.firebaseio.com/products/$id.json?auth=$_authToken';
     final prodIndex = _items.indexWhere((element) => element.id == id);
     if (prodIndex >= 0) {
       try {
@@ -140,7 +146,7 @@ class Products with ChangeNotifier {
 
   Future<void> deleteProduct(String id) async {
     final url =
-        'https://flutter-shop-app-26fac.firebaseio.com/products/$id.json';
+        'https://flutter-shop-app-26fac.firebaseio.com/products/$id.json?auth=$_authToken';
     final existingProductIndex = _items.indexWhere((prod) => prod.id == id);
     var existingProduct = _items[existingProductIndex];
     _items.removeAt(existingProductIndex);
