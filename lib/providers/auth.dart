@@ -1,8 +1,9 @@
-import 'dart:async';
 import 'dart:convert';
+import 'dart:async';
 
 import 'package:flutter/widgets.dart';
 import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../models/http_exception.dart';
 
@@ -16,33 +17,33 @@ class Auth with ChangeNotifier {
     return token != null;
   }
 
-  String get userId {
-    return _userId;
-  }
-
   String get token {
-    if (_token != null &&
-        _expiryDate != null &&
-        _expiryDate.isAfter(
-          DateTime.now(),
-        )) {
+    if (_expiryDate != null &&
+        _expiryDate.isAfter(DateTime.now()) &&
+        _token != null) {
       return _token;
     }
     return null;
   }
 
-  Future<void> _authenticated(
-      String email, String password, String type) async {
+  String get userId {
+    return _userId;
+  }
+
+  Future<void> _authenticate(
+      String email, String password, String urlSegment) async {
     final url =
-        'https://identitytoolkit.googleapis.com/v1/accounts:$type?key=AIzaSyDXeUMKAcgAOmD86l5NwN8ux--lADfOwE8';
+        'https://identitytoolkit.googleapis.com/v1/accounts:$urlSegment?key=AIzaSyDXeUMKAcgAOmD86l5NwN8ux--lADfOwE8';
     try {
       final response = await http.post(
         url,
-        body: json.encode({
-          'email': email,
-          'password': password,
-          'returnSecureToken': true,
-        }),
+        body: json.encode(
+          {
+            'email': email,
+            'password': password,
+            'returnSecureToken': true,
+          },
+        ),
       );
       final responseData = json.decode(response.body);
       if (responseData['error'] != null) {
@@ -57,38 +58,69 @@ class Auth with ChangeNotifier {
           ),
         ),
       );
-      _autolLogout();
+      _autoLogout();
       notifyListeners();
-    } catch (err) {
-      print(err);
-      throw (err);
+      final prefs = await SharedPreferences.getInstance();
+      final userData = json.encode(
+        {
+          'token': _token,
+          'userId': _userId,
+          'expiryDate': _expiryDate.toIso8601String(),
+        },
+      );
+      prefs.setString('userData', userData);
+    } catch (error) {
+      throw error;
     }
   }
 
   Future<void> signup(String email, String password) async {
-    return _authenticated(email, password, 'signUp');
+    return _authenticate(email, password, 'signUp');
   }
 
-  Future<void> signin(String email, String password) async {
-    return _authenticated(email, password, 'signInWithPassword');
+  Future<void> login(String email, String password) async {
+    return _authenticate(email, password, 'signInWithPassword');
   }
 
-  void logout() {
+  Future<bool> tryAutoLogin() async {
+    final prefs = await SharedPreferences.getInstance();
+    if (!prefs.containsKey('userData')) {
+      return false;
+    }
+    final extractedUserData =
+        json.decode(prefs.getString('userData')) as Map<String, Object>;
+    final expiryDate = DateTime.parse(extractedUserData['expiryDate']);
+
+    if (expiryDate.isBefore(DateTime.now())) {
+      return false;
+    }
+    _token = extractedUserData['token'];
+    _userId = extractedUserData['userId'];
+    _expiryDate = expiryDate;
+    notifyListeners();
+    _autoLogout();
+    return true;
+  }
+
+  Future<void> logout() async {
     _token = null;
-    _expiryDate = null;
     _userId = null;
+    _expiryDate = null;
     if (_authTimer != null) {
       _authTimer.cancel();
       _authTimer = null;
     }
     notifyListeners();
+    final prefs = await SharedPreferences.getInstance();
+    // prefs.remove('userData');
+    prefs.clear();
   }
 
-  void _autolLogout() {
+  void _autoLogout() {
     if (_authTimer != null) {
       _authTimer.cancel();
     }
-    final expiryTime = _expiryDate.difference(DateTime.now()).inSeconds;
-    _authTimer = Timer(Duration(seconds: expiryTime), logout);
+    final timeToExpiry = _expiryDate.difference(DateTime.now()).inSeconds;
+    _authTimer = Timer(Duration(seconds: timeToExpiry), logout);
   }
 }
