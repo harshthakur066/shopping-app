@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import './helpers/custom_routes.dart';
+
 import './providers/orders.dart';
 import './providers/cart.dart';
 import './providers/products.dart';
@@ -48,10 +50,15 @@ class MyApp extends StatelessWidget {
         builder: (ctx, auth, _) => MaterialApp(
           title: 'Shopify',
           theme: ThemeData(
-            primarySwatch: Colors.deepOrange,
-            accentColor: Colors.pinkAccent,
-            fontFamily: 'Lato',
-          ),
+              primarySwatch: Colors.deepOrange,
+              accentColor: Colors.pinkAccent,
+              fontFamily: 'Lato',
+              pageTransitionsTheme: PageTransitionsTheme(
+                builders: {
+                  TargetPlatform.android: CustomPageTransitionBuilder(),
+                  TargetPlatform.iOS: CustomPageTransitionBuilder(),
+                },
+              )),
           home: auth.isAuth
               ? ProductOvervireScreen()
               : FutureBuilder(
